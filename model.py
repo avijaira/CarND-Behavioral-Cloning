@@ -91,9 +91,9 @@ model.add(Conv2D(48, 5, strides=2, activation='relu'))    # Output = (5, 37, 48)
 model.add(Conv2D(64, 3, activation='relu'))    # Output = (3, 35, 64)
 model.add(Conv2D(64, 3, activation='relu'))    # Output = (1, 33, 64)
 model.add(Flatten())    # Output = 2112
-model.add(Dense(100))
-model.add(Dense(50))
-model.add(Dense(10))
+model.add(Dense(100, activation='relu'))
+model.add(Dense(50, activation='relu'))
+model.add(Dense(10, activation='relu'))
 model.add(Dense(1))
 
 model.compile('adam', loss='mse')    # optimizer='adam'
