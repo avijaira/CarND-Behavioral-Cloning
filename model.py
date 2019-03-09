@@ -29,7 +29,6 @@ def generator(samples, batch_size=32):
                     images.append(image)
 
                 # Create adjusted steering angles for images from center, left, and right cameras
-                # TODO: Tune angle correction
                 correction = 0.2
                 angle = float(batch_sample[3])
                 # Steering angles for images from center, left, and right cameras
@@ -95,11 +94,10 @@ model.compile('adam', loss='mse')    # optimizer='adam'
 
 history_object = model.fit_generator(
     train_generator,
-    steps_per_epoch=np.ceil(len(train_samples) / batch_size),    # steps_per_epoch=len(train_samples),
+    steps_per_epoch=np.ceil(len(train_samples) / batch_size),
     validation_data=valid_generator,
-    validation_steps=np.ceil(len(valid_samples) / batch_size),    # validation_steps=len(valid_samples),
+    validation_steps=np.ceil(len(valid_samples) / batch_size),
     epochs=7,
     verbose=1)
 
 model.save('model.h5')
-
