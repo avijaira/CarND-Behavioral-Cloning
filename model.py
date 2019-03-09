@@ -4,13 +4,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from keras.models import Sequential
-from keras.layers import Flatten, Dense, Lambda, Cropping2D
-from keras.layers import Activation, Conv2D, MaxPooling2D, Dropout
-import matplotlib.pyplot as plt
+from keras.layers import Flatten, Dense, Lambda, Cropping2D, Conv2D
 
 
-# Generate data batch-by-batch to train the model
-def generator(samples, batch_size=32):
+# Generate data batch-by-batch to train and validate the model
+def generator(samples, batch_size=32, training=True):
     num_samples = len(samples)
     # The generator is expected to loop over its data indefinitely.
     while True:
@@ -25,7 +23,8 @@ def generator(samples, batch_size=32):
                 for i in range(3):
                     filename = batch_sample[i].split('/')[-1]
                     path = './data/IMG/' + filename
-                    image = cv2.imread(path)
+                    # Images in drive.py are loaded in RGB color space. Train and evaluate images in RGB color space.
+                    image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
                     images.append(image)
 
                 # Create adjusted steering angles for images from center, left, and right cameras
@@ -34,18 +33,23 @@ def generator(samples, batch_size=32):
                 # Steering angles for images from center, left, and right cameras
                 angles.extend([angle, angle + correction, angle - correction])
 
-            # Augment images with their flipped images
-            aug_images = []
-            aug_angles = []
-            for image, angle in zip(images, angles):
-                aug_images.append(image)
-                aug_angles.append(angle)
-                aug_images.append(cv2.flip(image, 1))
-                aug_angles.append(-1.0 * angle)
+            if training:
+                # Augment images with their flipped images
+                aug_images = []
+                aug_angles = []
+                for image, angle in zip(images, angles):
+                    aug_images.append(image)
+                    aug_angles.append(angle)
+                    aug_images.append(cv2.flip(image, 1))
+                    aug_angles.append(-1.0 * angle)
 
-            X_train = np.array(aug_images)
-            y_train = np.array(aug_angles)
-            yield shuffle(X_train, y_train)
+                X_train = np.array(aug_images)
+                y_train = np.array(aug_angles)
+                yield shuffle(X_train, y_train)
+            else:
+                X_valid = np.array(images)
+                y_valid = np.array(angles)
+                yield shuffle(X_valid, y_valid)
 
 
 samples = []
@@ -63,7 +67,9 @@ batch_size = 32
 
 # Compile and train model with generator function
 train_generator = generator(train_samples, batch_size=batch_size)
-valid_generator = generator(valid_samples, batch_size=batch_size)
+
+# No image augmentation for validation of the model (simulate real-world usage)
+valid_generator = generator(valid_samples, batch_size=batch_size, training=False)
 
 # Model from 'End to End Learning for Self-Driving Cars' by Nvidia
 model = Sequential()
